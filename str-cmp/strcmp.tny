@@ -1,0 +1,128 @@
+; strcmp
+; Jerred Shepherd
+; Outputs which of two given strings has a greater ASCII value
+JMP main
+
+; Main parameters
+string1: DS 10
+string2: DS 10
+
+; Function variables
+; Contains the current working index
+; And the different between the numbers
+strcmp_index: DS 1
+strcmp_diff:  DS 1
+
+; Function arguments
+; These store the address of the first
+; char in the string
+strcmp_string1_addr: DS 1
+strcmp_string2_addr: DS 1
+
+; These store the value of a single
+; character at a given 
+strcmp_string1_index_value: DS 1
+strcmp_string2_index_value: DS 1
+
+; Integer constants
+#0:    DB 0
+#1:    DB 1
+#null: DC '\n'
+
+strcmp_return:
+    ; Return value in accumulator
+    PUSH strcmp_diff
+    RET
+
+strcmp_loop_end:
+    ; Return to start of loop
+    JMP 1strcmp_loop_logic_1
+
+strcmp_increment_index:
+    ; index = index + 1
+    LD  strcmp_index
+    ADD #1
+    ST  strcmp_index
+    JMP strcmp_loop_end
+
+strcmp_compare_values:
+    ; diff = string1char - string2char
+    LD   strcmp_string1_index_value
+    SUB  strcmp_string2_index_value
+    ST   strcmp_diff
+    JMP  strcmp_increment_index
+
+; Check if string2 is null
+strcmp_check_null_string2:
+    ; if (string2char = "\n")
+    LD  strcmp_string2_index_value
+    LD  #null
+    JE  strcmp_return
+    ; else
+    JMP strcmp_compare_values
+
+; Check if string1 is null
+strcmp_check_null_string1:
+    ; if (string1char = "\n")
+    LD  strcmp_string1_index_value
+    LD  #null
+    JE  strcmp_check_null_string2
+    ; else
+    JMP strcmp_compare_values
+
+; Logic of the loop after getting index
+; values
+strcmp_loop_logic_2:
+    JMP strcmp_check_null_string1
+
+; Get the ASCII value from string2
+strcmp_check_string2:
+    ; string2char = &string2 + index
+    LD  strcmp_string1_addr
+    ADD strcmp_index
+    ST strcmp_string1_index_value
+    JMP strcmp_loop_logic_2
+
+; Get the ASCII value from string1
+strcmp_check_string1:
+    ; string1char = &string1 + index
+    LD  strcmp_string1_addr
+    ADD strcmp_index
+    ST strcmp_string1_index_value
+
+; Start of the loop
+1strcmp_loop_logic_1:
+    JMP strcmp_check_string1
+
+; int strcmp (char string1[], char string2[])
+strcmp:
+    ; int diff, index = 0
+    LD      #0
+    ST      strcmp_diff
+    ST      strcmp_index
+    ; Get arguments
+    LDPARAM 1
+    ST      strcmp_string1_addr
+    LDI     strcmp_string1_addr
+    LDPARAM 2
+    ST      strcmp_string2_addr
+    LDI     strcmp_string1_addr
+    ; Start loop
+    JMP     1strcmp_loop_logic_1
+    
+; Main function
+; Input two strings, call strcmp
+; Then output the result
+main:
+    LDA  string1
+    CALL inputString
+    LDA  string2
+    CALL inputString
+    PUSH string1
+    PUSH string2
+    CALL strcmp
+    POP
+    CALL printInteger
+    POP
+    POP
+    STOP
